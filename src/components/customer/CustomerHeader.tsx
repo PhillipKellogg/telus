@@ -64,11 +64,11 @@ function HealthRing({ score }: { score: number }) {
 
 export function CustomerHeader({ customer }: CustomerHeaderProps) {
   return (
-    <div className="flex items-center gap-4 p-4 bg-card rounded-lg border">
+    <div className="flex items-center gap-3 p-3 sm:p-4 bg-card rounded-lg border flex-1 min-w-0">
       <HealthRing score={customer.healthScore} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-xl font-semibold truncate">{customer.name}</h1>
+          <h1 className="text-base sm:text-xl font-semibold truncate">{customer.name}</h1>
           <Badge variant="outline" className={cn('text-xs', TIER_STYLES[customer.tier])}>
             {customer.tier}
           </Badge>
@@ -79,13 +79,13 @@ export function CustomerHeader({ customer }: CustomerHeaderProps) {
             {customer.billingStatus}
           </Badge>
         </div>
-        <p className="text-sm text-muted-foreground">{customer.company}</p>
-        <div className="flex items-center gap-4 mt-1.5 text-xs text-muted-foreground flex-wrap">
-          <span>{customer.tenureYears}yr tenure</span>
+        <p className="text-sm text-muted-foreground truncate">{customer.company}</p>
+        <div className="flex items-center gap-2 sm:gap-4 mt-1 text-xs text-muted-foreground flex-wrap">
+          <span>{customer.tenureYears}yr</span>
           <span>·</span>
           <span>${customer.monthlyRevenue.toLocaleString()}/mo</span>
-          <span>·</span>
-          <span>{customer.accountManager}</span>
+          <span className="hidden sm:inline">·</span>
+          <span className="hidden sm:inline">{customer.accountManager}</span>
           <span>·</span>
           <span>
             {customer.location.city}, {customer.location.state}

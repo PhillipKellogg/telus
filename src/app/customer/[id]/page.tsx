@@ -110,65 +110,113 @@ export default function CockpitPage({ params }: CockpitPageProps) {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_300px] gap-3 items-start">
-          {/* LEFT — Profile + Serviceability */}
-          <div className="sticky top-3 space-y-3">
-            <Card>
-              <CardHeader className="py-3 px-3">
-                <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Service Coverage
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 pb-3">
-                <ServiceabilityRings customer={customer} />
-              </CardContent>
-            </Card>
+          {/* LEFT — Profile + Serviceability (order-2 on mobile, shows after AI center) */}
+          <div className="order-2 lg:order-1 lg:sticky lg:top-3 space-y-3">
+            {/* Mobile: horizontal scrolling strip of mini-cards */}
+            <div className="flex gap-3 overflow-x-auto pb-1 lg:hidden snap-x snap-mandatory scrollbar-hide">
+              {[
+                {
+                  title: 'Service Coverage',
+                  content: <ServiceabilityRings customer={customer} />,
+                },
+                {
+                  title: 'Health Trend',
+                  content: <HealthSparkline customer={customer} />,
+                },
+                {
+                  title: 'Revenue',
+                  content: <RevenueWaterfall customer={customer} />,
+                },
+                {
+                  title: 'Account Details',
+                  content: (
+                    <div className="space-y-2 text-xs">
+                      {[
+                        ['Email', customer.email],
+                        ['Phone', customer.phone],
+                        ['Last Contact', customer.lastContactDate],
+                        ['Account Mgr', customer.accountManager],
+                      ].map(([label, value]) => (
+                        <div key={label} className="flex justify-between gap-2">
+                          <span className="text-muted-foreground shrink-0">{label}</span>
+                          <span className="font-medium text-right truncate">{value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ),
+                },
+              ].map(({ title, content }) => (
+                <Card key={title} className="snap-start shrink-0 w-[min(80vw,300px)]">
+                  <CardHeader className="py-2 px-3">
+                    <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-3 pb-3">{content}</CardContent>
+                </Card>
+              ))}
+            </div>
 
-            <Card>
-              <CardHeader className="py-3 px-3">
-                <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Account Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 pb-3 space-y-2 text-xs">
-                {[
-                  ['Email', customer.email],
-                  ['Phone', customer.phone],
-                  ['Last Contact', customer.lastContactDate],
-                  ['Account Mgr', customer.accountManager],
-                ].map(([label, value]) => (
-                  <div key={label} className="flex justify-between gap-2">
-                    <span className="text-muted-foreground shrink-0">{label}</span>
-                    <span className="font-medium text-right truncate">{value}</span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            {/* Desktop: stacked cards */}
+            <div className="hidden lg:flex lg:flex-col lg:gap-3">
+              <Card>
+                <CardHeader className="py-3 px-3">
+                  <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Service Coverage
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-3 pb-3">
+                  <ServiceabilityRings customer={customer} />
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader className="py-3 px-3">
-                <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Health Trend
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 pb-3">
-                <HealthSparkline customer={customer} />
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader className="py-3 px-3">
+                  <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Account Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-3 pb-3 space-y-2 text-xs">
+                  {[
+                    ['Email', customer.email],
+                    ['Phone', customer.phone],
+                    ['Last Contact', customer.lastContactDate],
+                    ['Account Mgr', customer.accountManager],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex justify-between gap-2">
+                      <span className="text-muted-foreground shrink-0">{label}</span>
+                      <span className="font-medium text-right truncate">{value}</span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader className="py-3 px-3">
-                <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Revenue Breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-3 pb-3">
-                <RevenueWaterfall customer={customer} />
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader className="py-3 px-3">
+                  <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Health Trend
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-3 pb-3">
+                  <HealthSparkline customer={customer} />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="py-3 px-3">
+                  <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Revenue Breakdown
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-3 pb-3">
+                  <RevenueWaterfall customer={customer} />
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           {/* CENTER — AI Command Center */}
-          <div className="space-y-3 min-w-0">
+          <div className="order-1 lg:order-2 space-y-3 min-w-0">
             <Card>
               <CardHeader className="py-3 px-4">
                 <div className="flex items-center justify-between">
@@ -250,7 +298,7 @@ export default function CockpitPage({ params }: CockpitPageProps) {
           </div>
 
           {/* RIGHT — History + Chat */}
-          <div className="sticky top-3 space-y-3">
+          <div className="order-3 lg:sticky lg:top-3 space-y-3">
             <Card className="overflow-hidden">
               <Tabs defaultValue="history">
                 <CardHeader className="py-2 px-3 pb-0">
@@ -266,7 +314,7 @@ export default function CockpitPage({ params }: CockpitPageProps) {
                 </CardHeader>
 
                 <TabsContent value="history" className="mt-0">
-                  <CardContent className="px-3 pb-3 pt-2 h-[calc(100vh-200px)] overflow-y-auto">
+                  <CardContent className="px-3 pb-3 pt-2 h-[60vh] lg:h-[calc(100vh-200px)] overflow-y-auto">
                     <InteractionTimeline
                       interactions={customer.interactions}
                       highlightedIds={highlightedIds}
@@ -276,7 +324,7 @@ export default function CockpitPage({ params }: CockpitPageProps) {
                 </TabsContent>
 
                 <TabsContent value="chat" className="mt-0">
-                  <CardContent className="px-3 pb-3 pt-2 h-[calc(100vh-200px)] flex flex-col overflow-hidden">
+                  <CardContent className="px-3 pb-3 pt-2 h-[60vh] lg:h-[calc(100vh-200px)] flex flex-col overflow-hidden">
                     <AIChat customerId={customer.id} />
                   </CardContent>
                 </TabsContent>
