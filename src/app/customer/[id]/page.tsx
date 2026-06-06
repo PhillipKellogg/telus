@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState, useEffect, useCallback } from 'react';
+import { use, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Sparkles, RefreshCw, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { CustomerHeader } from '@/components/customer/CustomerHeader';
 import { ServiceabilityRings } from '@/components/customer/ServiceabilityRings';
 import { AIInsightPanel } from '@/components/ai/AIInsightPanel';
 import { NextBestActionCard } from '@/components/ai/NextBestActionCard';
+import { NBAGhostCard } from '@/components/ai/NBAGhostCard';
 import { AIDraftPanel } from '@/components/ai/AIDraftPanel';
 import { AIChat } from '@/components/ai/AIChat';
 import { InteractionTimeline } from '@/components/history/InteractionTimeline';
@@ -38,13 +39,6 @@ export default function CockpitPage({ params }: CockpitPageProps) {
 
   const [highlightedIds, setHighlightedIds] = useState<string[]>([]);
   const [activeDrawer, setActiveDrawer] = useState<Interaction | null>(null);
-
-  useEffect(() => {
-    if (customer) {
-      insights.fetchInsights();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [customer?.id]);
 
   const handleVerifySource = useCallback((interactionId: string) => {
     setHighlightedIds((prev) => {
@@ -181,12 +175,18 @@ export default function CockpitPage({ params }: CockpitPageProps) {
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-blue-500" />
                     <CardTitle className="text-sm font-semibold">AI Account Insights</CardTitle>
+                    {insights.isStreaming && (
+                      <span className="flex items-center gap-1 text-[10px] text-blue-400 font-normal">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse inline-block" />
+                        syncing
+                      </span>
+                    )}
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-7 text-xs gap-1.5 text-muted-foreground"
-                    onClick={() => insights.fetchInsights()}
+                    onClick={() => insights.refetch()}
                     disabled={insights.isLoading || insights.isStreaming}
                   >
                     <RefreshCw
@@ -216,26 +216,36 @@ export default function CockpitPage({ params }: CockpitPageProps) {
                 <Separator className="flex-1" />
               </div>
 
-              {insights.isLoading || (!insights.nextBestActions && insights.isStreaming) ? (
-                <div className="space-y-2">
-                  {[0, 1, 2].map((i) => (
-                    <Skeleton key={i} className="h-36 w-full rounded-xl" />
-                  ))}
-                </div>
-              ) : (
-                insights.nextBestActions?.map((action) => (
-                  <NextBestActionCard
-                    key={action.id}
-                    action={action}
-                    customerId={customer.id}
-                    highlightedIds={highlightedIds}
-                    onHighlightEvidence={handleHighlightEvidence}
-                    onDismiss={handleDismiss}
-                    onFeedback={submitFeedback}
-                    onGenerateDraft={(type, context) => draft.generate(customer.id, type, context)}
-                  />
-                ))
-              )}
+              <div className="space-y-2 relative">
+                {/* Ghost cards — always rendered, fade out when real data arrives */}
+                {(!insights.nextBestActions || insights.isLoading) && (
+                  <div className="space-y-2">
+                    {[0, 1, 2].map((i) => (
+                      <NBAGhostCard key={i} index={i} />
+                    ))}
+                  </div>
+                )}
+
+                {/* Real cards — fade in over the ghosts */}
+                {insights.nextBestActions && (
+                  <div className="space-y-2 animate-in fade-in slide-in-from-bottom-1 duration-300">
+                    {insights.nextBestActions.map((action) => (
+                      <NextBestActionCard
+                        key={action.id}
+                        action={action}
+                        customerId={customer.id}
+                        highlightedIds={highlightedIds}
+                        onHighlightEvidence={handleHighlightEvidence}
+                        onDismiss={handleDismiss}
+                        onFeedback={submitFeedback}
+                        onGenerateDraft={(type, context) =>
+                          draft.generate(customer.id, type, context)
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

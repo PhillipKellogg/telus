@@ -1,23 +1,17 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AIInsightBullet, NextBestAction } from '@/types/ai';
 
-interface AIInsightsState {
-  summary: AIInsightBullet[] | null;
-  nextBestActions: NextBestAction[] | null;
-  isLoading: boolean;
-  isStreaming: boolean;
-  error: string | null;
+export interface AIInsightsData {
+  summary: AIInsightBullet[];
+  nextBestActions: NextBestAction[];
 }
 
-function tryParsePartial(
-  raw: string,
-): Partial<{ summary: AIInsightBullet[]; nextBestActions: NextBestAction[] }> {
+function tryParsePartial(raw: string): Partial<AIInsightsData> {
   try {
-    return JSON.parse(raw);
+    return JSON.parse(raw) as AIInsightsData;
   } catch {
-    // Attempt to extract the summary array even if the JSON is incomplete
     const summaryMatch = raw.match(/"summary"\s*:\s*(\[[\s\S]*?\](?=\s*,|\s*\}))/);
     if (summaryMatch) {
       try {
@@ -30,25 +24,16 @@ function tryParsePartial(
   }
 }
 
+export function aiInsightsKey(customerId: string) {
+  return ['ai-insights', customerId] as const;
+}
+
 export function useAIInsights(customerId: string) {
-  const [state, setState] = useState<AIInsightsState>({
-    summary: null,
-    nextBestActions: null,
-    isLoading: false,
-    isStreaming: false,
-    error: null,
-  });
+  const queryClient = useQueryClient();
 
-  const fetchInsights = useCallback(async () => {
-    setState({
-      summary: null,
-      nextBestActions: null,
-      isLoading: true,
-      isStreaming: false,
-      error: null,
-    });
-
-    try {
+  const query = useQuery<AIInsightsData>({
+    queryKey: aiInsightsKey(customerId),
+    queryFn: async () => {
       const res = await fetch('/api/ai/insights', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,8 +43,6 @@ export function useAIInsights(customerId: string) {
       if (!res.ok) {
         throw new Error('Failed to fetch insights');
       }
-
-      setState((s) => ({ ...s, isLoading: false, isStreaming: true }));
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
@@ -72,32 +55,27 @@ export function useAIInsights(customerId: string) {
         }
         accumulated += decoder.decode(value, { stream: true });
 
-        // Update state progressively as partial JSON becomes parseable
         const partial = tryParsePartial(accumulated);
-        if (partial.summary) {
-          setState((s) => ({ ...s, summary: partial.summary ?? null }));
-        }
-        if (partial.nextBestActions) {
-          setState((s) => ({ ...s, nextBestActions: partial.nextBestActions ?? null }));
+        if (partial.summary || partial.nextBestActions) {
+          queryClient.setQueryData<Partial<AIInsightsData>>(aiInsightsKey(customerId), (old) => ({
+            ...old,
+            ...partial,
+          }));
         }
       }
 
-      // Final parse to ensure complete data
-      const final = JSON.parse(accumulated) as {
-        summary: AIInsightBullet[];
-        nextBestActions: NextBestAction[];
-      };
-      setState({
-        summary: final.summary,
-        nextBestActions: final.nextBestActions,
-        isLoading: false,
-        isStreaming: false,
-        error: null,
-      });
-    } catch (err) {
-      setState((s) => ({ ...s, isLoading: false, isStreaming: false, error: String(err) }));
-    }
-  }, [customerId]);
+      return JSON.parse(accumulated) as AIInsightsData;
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
+  });
 
-  return { ...state, fetchInsights };
+  return {
+    summary: (query.data as AIInsightsData | undefined)?.summary ?? null,
+    nextBestActions: (query.data as AIInsightsData | undefined)?.nextBestActions ?? null,
+    isLoading: query.isLoading,
+    isStreaming: query.isFetching && !query.isLoading,
+    error: query.error?.message ?? null,
+    refetch: query.refetch,
+  };
 }

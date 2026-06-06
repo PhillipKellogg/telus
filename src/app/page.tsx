@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { Search, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MOCK_CUSTOMERS } from '@/lib/mock-data';
+import { aiInsightsKey } from '@/hooks/useAIInsights';
 import type { Customer } from '@/types/customer';
 import { cn } from '@/lib/utils';
 
@@ -34,6 +36,27 @@ function HealthIndicator({ score }: { score: number }) {
 
 export default function HomePage() {
   const [query, setQuery] = useState('');
+  const queryClient = useQueryClient();
+
+  // Prefetch AI insights while hovering so the cockpit opens with data already loading
+  const handlePrefetch = useCallback(
+    (customerId: string) => {
+      queryClient.prefetchQuery({
+        queryKey: aiInsightsKey(customerId),
+        queryFn: async () => {
+          const res = await fetch('/api/ai/insights', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ customerId }),
+          });
+          const text = await res.text();
+          return JSON.parse(text);
+        },
+        staleTime: 5 * 60 * 1000,
+      });
+    },
+    [queryClient],
+  );
 
   const filtered = MOCK_CUSTOMERS.filter(
     (c) =>
@@ -69,7 +92,12 @@ export default function HomePage() {
 
         <div className="grid gap-3">
           {filtered.map((customer) => (
-            <Link key={customer.id} href={`/customer/${customer.id}`}>
+            <Link
+              key={customer.id}
+              href={`/customer/${customer.id}`}
+              onMouseEnter={() => handlePrefetch(customer.id)}
+              onFocus={() => handlePrefetch(customer.id)}
+            >
               <Card className="hover:shadow-md transition-shadow cursor-pointer border-border/60">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between gap-3">
