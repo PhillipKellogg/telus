@@ -23,8 +23,12 @@ const BILLING_STYLES: Record<Customer['billingStatus'], string> = {
 };
 
 function HealthIndicator({ score }: { score: number }) {
-  if (score >= 70) return <TrendingUp className="w-4 h-4 text-emerald-500" />;
-  if (score >= 45) return <Minus className="w-4 h-4 text-amber-500" />;
+  if (score >= 70) {
+    return <TrendingUp className="w-4 h-4 text-emerald-500" />;
+  }
+  if (score >= 45) {
+    return <Minus className="w-4 h-4 text-amber-500" />;
+  }
   return <TrendingDown className="w-4 h-4 text-red-500" />;
 }
 

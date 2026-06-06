@@ -1,0 +1,15 @@
+services:
+  web:
+    build: .
+    container_name: telus-web-1
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
+    name: cloudflared_web
