@@ -139,7 +139,7 @@ export default function HomePage() {
           </div>
           <h1 className="text-3xl font-bold tracking-tight">Sales Cockpit</h1>
           <p className="text-muted-foreground">
-            Select a customer account to open the AI-powered view.
+            Select a customer account to open the AI-powered 360° view
           </p>
         </div>
 
