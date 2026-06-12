@@ -59,7 +59,7 @@ function ServiceRing({ service }: { service: Service }) {
           style={{ color: service.status !== 'unavailable' ? color : undefined }}
         >
           {service.status === 'active' ? (
-            <Check className="w-3 h-3" strokeWidth={3.5} />
+            <Check className="w-3 h-3 rotate-0" strokeWidth={3.5} />
           ) : service.status === 'available' ? (
             <Circle className="w-2.5 h-2.5" strokeWidth={3} />
           ) : (
