@@ -1,6 +1,7 @@
 'use client';
 
 import type { Customer, Service } from '@/types/customer';
+import { Check, Circle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ServiceabilityRingsProps {
@@ -52,12 +53,18 @@ function ServiceRing({ service }: { service: Service }) {
         </svg>
         <span
           className={cn(
-            'absolute inset-0 flex items-center justify-center text-[8px] font-bold rotate-90',
+            'absolute inset-0 flex items-center justify-center',
             service.status === 'unavailable' ? 'text-gray-300' : '',
           )}
           style={{ color: service.status !== 'unavailable' ? color : undefined }}
         >
-          {service.status === 'active' ? '✓' : service.status === 'available' ? '○' : '✕'}
+          {service.status === 'active' ? (
+            <Check className="w-3 h-3" strokeWidth={3.5} />
+          ) : service.status === 'available' ? (
+            <Circle className="w-2.5 h-2.5" strokeWidth={3} />
+          ) : (
+            <X className="w-3 h-3" strokeWidth={3.5} />
+          )}
         </span>
       </div>
       <span className="text-[10px] text-center text-muted-foreground leading-tight max-w-[72px] truncate">
