@@ -2,7 +2,7 @@
 
 import { use, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Sparkles, RefreshCw, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Sparkles, RefreshCw, MessageSquare, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -101,7 +101,7 @@ export default function CockpitPage({ params }: CockpitPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <div className="max-w-[1600px] mx-auto px-3 py-3 space-y-3">
+      <div className="max-w-[1600px] mx-auto px-3 pt-6 pb-3 space-y-3">
         <div className="flex items-center gap-3">
           <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" />
@@ -109,9 +109,35 @@ export default function CockpitPage({ params }: CockpitPageProps) {
           <CustomerHeader customer={customer} />
         </div>
 
+        {customer.billingStatus !== 'Current' && (
+          <div
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs ${
+              customer.billingStatus === 'Collections'
+                ? 'bg-red-50 border-red-200 text-red-700'
+                : customer.billingStatus === 'Suspended'
+                  ? 'bg-red-50 border-red-200 text-red-700'
+                  : 'bg-amber-50 border-amber-200 text-amber-700'
+            }`}
+          >
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+            <span>
+              Billing status: <strong>{customer.billingStatus}</strong>
+              {customer.billingStatus === 'Collections' &&
+                ' — account in collections, escalation may be required'}
+              {customer.billingStatus === 'Suspended' &&
+                ' — service suspended, payment needed to restore'}
+              {customer.billingStatus === 'Overdue' &&
+                ' — payment overdue, consider addressing before upsell'}
+            </span>
+            <span className="ml-auto text-muted-foreground shrink-0">
+              Last contact: {customer.lastContactDate}
+            </span>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_300px] gap-3 items-start">
           {/* LEFT — Profile + Serviceability (order-2 on mobile, shows after AI center) */}
-          <div className="order-2 lg:order-1 lg:sticky lg:top-3 space-y-3">
+          <div className="order-2 lg:order-1 lg:sticky lg:top-6 space-y-3">
             {/* Mobile: horizontal scrolling strip of mini-cards */}
             <div className="flex gap-3 overflow-x-auto pb-1 lg:hidden snap-x snap-mandatory scrollbar-hide">
               {[
@@ -277,11 +303,12 @@ export default function CockpitPage({ params }: CockpitPageProps) {
                 {/* Real cards — fade in over the ghosts */}
                 {insights.nextBestActions && (
                   <div className="space-y-2 animate-in fade-in slide-in-from-bottom-1 duration-300">
-                    {insights.nextBestActions.map((action) => (
+                    {insights.nextBestActions.map((action, index) => (
                       <NextBestActionCard
                         key={action.id}
                         action={action}
                         customerId={customer.id}
+                        rank={index + 1}
                         highlightedIds={highlightedIds}
                         onHighlightEvidence={handleHighlightEvidence}
                         onDismiss={handleDismiss}
@@ -298,7 +325,7 @@ export default function CockpitPage({ params }: CockpitPageProps) {
           </div>
 
           {/* RIGHT — History + Chat */}
-          <div className="order-3 lg:sticky lg:top-3 space-y-3">
+          <div className="order-3 lg:sticky lg:top-6 space-y-3">
             <Card className="overflow-hidden">
               <Tabs defaultValue="history">
                 <CardHeader className="py-2 px-3 pb-0">

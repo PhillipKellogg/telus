@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 interface NextBestActionCardProps {
   action: NextBestAction;
   customerId: string;
+  rank: number;
   highlightedIds: string[];
   onHighlightEvidence: (ids: string[]) => void;
   onDismiss: (id: string, reason: FeedbackReason) => void;
@@ -101,6 +102,7 @@ const DISMISS_REASONS: { value: FeedbackReason; label: string }[] = [
 export function NextBestActionCard({
   action,
   customerId: _customerId,
+  rank,
   highlightedIds,
   onHighlightEvidence,
   onDismiss,
@@ -178,9 +180,19 @@ export function NextBestActionCard({
       <CardHeader className="pb-2 pt-3 px-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className={cn('p-1 rounded-md', config.bg)}>
-              <Icon className={cn('w-4 h-4', config.color)} />
-            </span>
+            <div className="relative shrink-0">
+              <span className={cn('p-1 rounded-md block', config.bg)}>
+                <Icon className={cn('w-4 h-4', config.color)} />
+              </span>
+              <span
+                className={cn(
+                  'absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white',
+                  rank === 1 ? 'bg-slate-700' : rank === 2 ? 'bg-slate-500' : 'bg-slate-400',
+                )}
+              >
+                {rank}
+              </span>
+            </div>
             <div>
               <p className="text-sm font-semibold leading-tight">{action.title}</p>
               <Badge
